@@ -5,7 +5,9 @@ const path = require('path')
 const methodOverride = require('method-override')
 const listing = require('./models/listing');
 const ejsMate = require('ejs-mate');
-
+const wrapAsync = require('./utils/wrapAsync');
+const expressError = require('./utils/expressError');
+const {listingSchema} = require('./schema');
 const MONGO_URL = 'mongodb://localhost:27017/wanderwave';
 
 async function main() {
@@ -28,11 +30,21 @@ app.get("/", (req, res) => {
     res.send("Hi, I am root");
 });
 
+const validateListing = (req,res,next) => {
+    let {error} = listingSchema.validate(req.body)
+    if(error){
+        let errMsg = error.details.map((el) => el.message).join(',')
+        throw new expressError(400,errMsg)   
+    }else{
+        next()
+    }
+}
+    
 //index route
-app.get("/listings", async (req,res)=> {
-    const allListings = await Listing.find({})
+app.get("/listings", wrapAsync(async (req,res)=> {
+    const allListings = await listing.find({})
     res.render("/listings/index.ejs", {allListings})
-});
+}));
 
 //new route
 app.get("/listings/new", (req,res)=> {
@@ -40,56 +52,67 @@ app.get("/listings/new", (req,res)=> {
 });
 
 //show route
-app.get("/listings/:id", async (req,res)=> {
+app.get("/listings/:id", wrapAsync(async (req,res)=> {
     const {id} = req.params
-    const listing = await Listing.findById(id)
+    const listing = await listing.findById(id)
     res.render("/listings/show.ejs", {listing})
-});
+}));
 
 //Create route
-app.post("/listings", async (req,res)=> {
-    // const {title, description, price, location, country} = req.body
-    let newListing = new Listing(req.body.listing)
+app.post("/listings",validateListing, wrapAsync (async (req,res,next)=> {
+    // const {title, description, price, location, country} = req.body   
+    let newListing = new listing(req.body.listing)
     await newListing.save()
     res.redirect(`/listings/${newListing._id}`)
-});
+    } 
+)) ;
 //Edit route
-app.get("/listings/:id/edit", async (req,res)=> {
+app.get("/listings/:id/edit", wrapAsync (async (req,res)=> {
     const {id} = req.params
-    const listing = await Listing.findById(id)
+    const listing = await listing.findById(id)
     res.render("/listings/edit.ejs", {listing})
-});
+}));
 
 //Update route
-app.put("/listings/:id", async (req,res)=> {
+app.put("/listings/:id",validateListing,  wrapAsync (async (req,res)=> {
     let {id} = req.params
-    let deletListing = await Listing.findByIdAndUpdate(id);
+    let deletListing = await listing.findByIdAndUpdate(id);
     console.log(deletListing)
     res.redirect(`/listings/${id}`)
-});
+}));
 
 //Delete route
-app.delete("/listings/:id", async (req,res)=> {
+app.delete("/listings/:id", wrapAsync (async (req,res)=> {
     let {id} = req.params
-    await Listing.findByIdAndDelete(id)
+    await listing.findByIdAndDelete(id)
     res.redirect("/listings")
-});
-app.get("/testListing", async (req, res) => {
-    let samplistings = new Listing({
-        title: "SampTitle",
-        description: "SampDesc",
-        price: 100,
-        image : "",
-        location: "SampLocation",
-        country: "SampCountry"
-    });
+})); 
+// app.get("/testListing", async (req, res) => {
+//     let samplistings = new Listing({
+//         title: "SampTitle",
+//         description: "SampDesc",
+//         price: 100,
+//         image : "",
+//         location: "SampLocation",
+//         country: "SampCountry"
+//     });
 
-    await samplistings.save();  // Save the listing first
-    console.log("Listing saved");
+//     await samplistings.save();  // Save the listing first
+//     console.log("Listing saved");
 
-    // Send the response to the client
-    res.send("Listing saved successfully!");
-});
+//     // Send the response to the client
+//     res.send("Listing saved successfully!");
+// });
+
+app.all("*", (req,res,next) => { 
+    next(new expressError( 404, "Page Not Found!"))
+})
+ 
+app.use((err,req,res,next) => {
+    let {statusCode = 500, message = "Something went wrong!"} = err
+    res.status(statusCode).render("error.ejs", {message})
+    // res.send(statusCode).send(message)
+})
 
 app.listen(5000, () => {
     console.log("Server is running on port 5000");
