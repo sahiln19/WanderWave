@@ -108,11 +108,11 @@ app.all("*", (req,res,next) => {
     next(new expressError( 404, "Page Not Found!"))
 })
  
-app.use((err,req,res,next) => {
-    let {statusCode = 500, message = "Something went wrong!"} = err
-    res.status(statusCode).render("error.ejs", {message})
-    // res.send(statusCode).send(message)
-})
+// app.use((err,req,res,next) => {
+//     let {statusCode = 500, message = "Something went wrong!"} = err
+//     res.status(statusCode).render("error", {message})
+//     // res.send(statusCode).send(message)
+// })
 
 app.listen(5000, () => {
     console.log("Server is running on port 5000");
