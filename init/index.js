@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const initData = require('./data');
 const listing = require('../models/listing');
-const MONGO_URL = 'mongodb://localhost:27017/sahil';
+const MONGO_URL = 'mongodb://localhost:27017/WanderWave';
 
 main()
 .then(() =>

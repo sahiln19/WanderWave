@@ -8,7 +8,7 @@ const ejsMate = require('ejs-mate');
 const wrapAsync = require('./utils/wrapAsync');
 const expressError = require('./utils/expressError');
 const {listingSchema} = require('./schema');
-const MONGO_URL = 'mongodb://localhost:27017/wanderwave';
+const MONGO_URL = 'mongodb://localhost:27017/WanderWave';
 
 async function main() {
     await mongoose.connect(MONGO_URL);
@@ -43,12 +43,12 @@ const validateListing = (req,res,next) => {
 //index route
 app.get("/listings", wrapAsync(async (req,res)=> {
     const allListings = await listing.find({})
-    res.render("/listings/index.ejs", {allListings})
+    res.render("listings/index", {allListings})
 }));
 
 //new route
 app.get("/listings/new", (req,res)=> {
-    res.render("/listings/new.ejs")
+    res.render("listings/new.ejs")
 });
 
 //show route
@@ -87,32 +87,32 @@ app.delete("/listings/:id", wrapAsync (async (req,res)=> {
     await listing.findByIdAndDelete(id)
     res.redirect("/listings")
 })); 
-// app.get("/testListing", async (req, res) => {
-//     let samplistings = new Listing({
-//         title: "SampTitle",
-//         description: "SampDesc",
-//         price: 100,
-//         image : "",
-//         location: "SampLocation",
-//         country: "SampCountry"
-//     });
+app.get("/testListing", async (req, res) => {
+    let samplistings = new listing({
+        title: "SampTitle",
+        description: "SampDesc",
+        price: 100,
+        image : "",
+        location: "SampLocation",
+        country: "SampCountry"
+    });
 
-//     await samplistings.save();  // Save the listing first
-//     console.log("Listing saved");
+    await samplistings.save();  // Save the listing first
+    console.log("Listing saved");
 
-//     // Send the response to the client
-//     res.send("Listing saved successfully!");
-// });
+    // Send the response to the client
+    res.send("Listing saved successfully!");
+});
 
-app.all("*", (req,res,next) => { 
+app.all("*", (req,res,next) => {    
     next(new expressError( 404, "Page Not Found!"))
 })
  
-// app.use((err,req,res,next) => {
-//     let {statusCode = 500, message = "Something went wrong!"} = err
-//     res.status(statusCode).render("error", {message})
-//     // res.send(statusCode).send(message)
-// })
+app.use((err, req, res, next) => {
+    const { statusCode = 500, message = "Something went wrong!" } = err;
+    res.status(statusCode).send(message);
+});
+
 
 app.listen(5000, () => {
     console.log("Server is running on port 5000");
