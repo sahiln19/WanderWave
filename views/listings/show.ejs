@@ -1,43 +1,16 @@
-<% layout("/layouts/boilerplate") %>
-<div class="row mt-3">
-    <div class="col-8 offset-2">
-        <h3><%= listing.title %></h3>
-    </div>
-    <div class="card col-6 offset-2">
-        <img src="<%= listing.image %>" alt="listing_image" class="card-img-top show-img">
-        <div class="card-body">
-            <p class="card-text">
-                <%= listing.description %> <br>
-                &#8377; <%= listing.price.toLocaleString("en-IN") %> <br>
-                <%= listing.location %> <br> 
-                <%= listing.country %>
-            </p>
-        </div>
-    </div>  
-</div>
-
-<div class="row mt-3">
-    <div class="col-8 offset-2 d-flex justify-content-between">
-        <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark edit-btn">Edit</a>
-
-        <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" style="display:inline;">
-            <button class="btn btn-dark">Delete</button>
-        </form>
-    </div>
-</div>
-
-<div class="col-8 offset-2 mt-5 mb-3">
-    <hr/>
-    <h4>Leave a Review</h4>
-    <form action="/listings/<%= listing._id %>/reviews" method="POST">
-        <div class="mb-3 mt-3">
-            <label for="rating" class="form-label">Rating</label>
-            <input type="range" min="1" max="5" id="rating" name="review[rating]" class="form-range">
-        </div>
-        <div class="mb-3 mt-3">
-            <label for="comment" class="form-label">Comments</label>
-            <textarea name="review[comment]" id="comment" cols="30" rows="5" class="form-control"></textarea>
-        </div>
-        <button class="btn btn-outline-dark">Submit</button>
+<% layout('layouts/boilerPlate') %>
+<body>
+    <form method="GET" action="/listings/new"></form>
+    <h3>Listimg Details :</h3>
+    <ul>
+        <li><%= Listing.title %></li>
+        <li><%= Listing.description %></li>
+        <li> &#8377; <%= Listing.price.toLocaleString("en-IN") %></li>
+        <li><%= Listing.location %></li>
+        <li><%= Listing.country  %></li>
+    </ul>
+    <a href="/listings/<%= Listing._id %>/edit">Edit This Listing</a>
+    <form method="POST" action="/listings/<%=Listing._id %>?_method=DELETE">
+        <button>Delete this Listing</button>
     </form>
-</div>
+</body> 
