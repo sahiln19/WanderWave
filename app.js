@@ -10,6 +10,7 @@ let  listings = require('./routes/listing');
 let session = require('express-session');
 let  reviews = require('./routes/review');
 let  MONGO_URL = 'mongodb://localhost:27017/WanderWave';
+let  flash = require('connect-flash');  
 
 async function main() {
     await mongoose.connect(MONGO_URL);
@@ -39,6 +40,12 @@ let sessionOptions = {
 }
 
 app.use(session(sessionOptions));
+app.use(flash());
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
 app.use('/listings', listings);
 app.use('/listings/:id/reviews', reviews);
 

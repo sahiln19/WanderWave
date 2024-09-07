@@ -6,15 +6,16 @@ let  { listingSchema} = require('../schema.js');
 let  ExpressError = require('../utils/ExpressError');
 
 
-let  validateListing = (req, res, next) => {
-    let error = listingSchema.validate(req.body);
-    if(error){
+let validateListing = (req, res, next) => {
+  let error = listingSchema.validate(req.body);
+  if (error && error.details) {  // Add a check for error.details
       let errMsg = error.details.map((el) => el.message).join(',');
-        throw new ExpressError(400, errMsg);
-    }else { 
+      throw new ExpressError(400, errMsg);
+  } else { 
       next();
-    }
-  } 
+  }
+}
+
 
 //index route 
 router.get('/', wrapAsync(async(req, res) => {
@@ -30,6 +31,10 @@ router.get('/', wrapAsync(async(req, res) => {
   router.get('/:id', wrapAsync(async(req, res) => {
     let {id} = req.params;
     let Listing = await listing.findById(id).populate("reviews"); 
+    if (!Listing) {
+      req.flash('error', 'Listing you requested for does not exists!');
+      return res.redirect('/listings');
+    }
       res.render('./listings/show.ejs', {Listing});
   })); 
 
@@ -40,6 +45,7 @@ router.post('/', validateListing ,wrapAsync(async(req, res, next) => {
       title,description,image,price,location,country,  
     }); 
     await newListing.save();
+    req.flash('success', 'Successfully Created New Listing!');
     res.redirect('/listings');
 }));
 
@@ -47,6 +53,10 @@ router.post('/', validateListing ,wrapAsync(async(req, res, next) => {
 router.get('/:id/edit', wrapAsync(async(req, res) => {
 let {id} = req.params;
 let Listing = await listing.findById(id);
+if (!Listing) {
+  req.flash('error', 'Listing you requested for does not exists!');
+  return res.redirect('/listings');
+}
 res.render('./listings/edit.ejs', {Listing});
 })); 
 
@@ -54,6 +64,7 @@ res.render('./listings/edit.ejs', {Listing});
 router.put('/:id', validateListing , wrapAsync(async(req, res) => {
 let {id} = req.params;
 let Listing = await listing.findByIdAndUpdate(id, {...req.body.Listing});
+req.flash('success', 'Listing Updated!');
 res.redirect(`/listings/${id}`);
 }))
 
@@ -61,6 +72,7 @@ res.redirect(`/listings/${id}`);
 router.delete('/:id', wrapAsync(async(req, res) => {
 let {id} = req.params;
 await listing.findByIdAndDelete(id); 
+req.flash('success', 'Listing Deleted!');
 res.redirect('/listings'); 
 }));
 
