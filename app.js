@@ -11,6 +11,9 @@ let session = require('express-session');
 let  reviews = require('./routes/review');
 let  MONGO_URL = 'mongodb://localhost:27017/WanderWave';
 let  flash = require('connect-flash');  
+let passport = require('passport');
+let LocalStrategy = require('passport-local'); 
+let User = require('./models/user');
 
 async function main() {
     await mongoose.connect(MONGO_URL);
@@ -41,11 +44,22 @@ let sessionOptions = {
 
 app.use(session(sessionOptions));
 app.use(flash());
+
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 app.use((req, res, next) => {
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
 });
+
+
+
 app.use('/listings', listings);
 app.use('/listings/:id/reviews', reviews);
 
